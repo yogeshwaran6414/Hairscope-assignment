@@ -1,0 +1,55 @@
+.lab-page {
+  background: #10151f;
+  color: #7ee9f7;
+  border-radius: 14px;
+  padding: 30px 40px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0 20px #0bf7ff88;
+}
+
+.lab-page h2 {
+  margin-bottom: 20px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-size: 28px;
+}
+
+.lab-timer {
+  font-size: 28px;
+  margin-bottom: 30px;
+  font-weight: 700;
+  user-select: none;
+}
+
+.lab-exit-btn {
+  background-color: #cc0000;
+  color: white;
+  border: none;
+  padding: 14px 40px;
+  font-size: 17px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  user-select: none;
+}
+
+.lab-exit-btn:disabled {
+  background-color: #660000;
+  cursor: not-allowed;
+}
+
+.lab-exit-btn:hover:not(:disabled) {
+  background-color: #ff0000;
+}
+
+.lab-error {
+  margin-top: 22px;
+  color: #ff4949;
+  font-weight: 600;
+  font-size: 16px;
+  user-select: text;
+}
