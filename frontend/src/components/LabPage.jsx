@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import "./LabPage.css";
+
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
 function formatTime(ms) {
   if (ms <= 0) return "00:00";
   const totalSeconds = Math.floor(ms / 1000);
@@ -18,7 +21,7 @@ export default function LabPage({ onExit }) {
     // Fetch initial remaining time
     const fetchTime = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/time-remaining");
+        const res = await axios.get(`${backendUrl}/api/time-remaining`);
         setTimeRemainingMs(res.data.timeRemainingMs);
         if (res.data.timeRemainingMs === 0) {
           setError("Session time expired. Access denied.");
@@ -33,7 +36,7 @@ export default function LabPage({ onExit }) {
     // Poll every second
     intervalRef.current = setInterval(async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/time-remaining");
+        const res = await axios.get(`${backendUrl}/api/time-remaining`);
         if (res.data.timeRemainingMs === 0) {
           clearInterval(intervalRef.current);
           setTimeRemainingMs(0);
@@ -54,7 +57,7 @@ export default function LabPage({ onExit }) {
 
   const handleExitClick = async () => {
     try {
-      await axios.post("http://localhost:5000/api/exit");
+      await axios.post(`${backendUrl}/api/exit`);
       if (intervalRef.current) clearInterval(intervalRef.current);
       onExit(timeRemainingMs);
     } catch {

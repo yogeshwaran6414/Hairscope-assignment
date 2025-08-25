@@ -1,12 +1,16 @@
 import React from "react";
 import axios from "axios";
+
 import LoginPage from "./components/LoginPage";
 import "./App.css";
+
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
 export default function App() {
   // login function passed down to LoginPage to handle backend login call
   const handleLogin = async (password) => {
     try {
-      const res = await axios.post("http://localhost:5000/api/login", { password });
+      const res = await axios.post( `${backendUrl}/api/login` , { password });
       if (res.data.success) {
         return res.data.timeRemainingMs;
       }

@@ -2,24 +2,24 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+
+
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// Hardcoded user password as per your frontend
+// Hardcoded user password
 const USER_PASSWORD = "Hairscope@2025";
 
 // Session related variables
 let sessionActive = false;
 let sessionStartTime = null;
-const SESSION_DURATION_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
+const SESSION_DURATION_MS = 10 * 60 * 1000; // 10 minutes in ms
 let sessionExpirationTime = null;
 let timeRemainingOnExit = null;
 let loginBlocked = false;
 
-// Helper to calculate remaining session time
 function getTimeRemaining() {
   if (!sessionStartTime) return 0;
   const now = Date.now();
@@ -27,7 +27,7 @@ function getTimeRemaining() {
   return remaining > 0 ? remaining : 0;
 }
 
-// Login API
+// API: Login
 app.post('/api/login', (req, res) => {
   if (loginBlocked) {
     return res.status(403).json({ success: false, message: 'Session time expired. Login blocked.' });
@@ -59,7 +59,7 @@ app.post('/api/login', (req, res) => {
   res.json({ success: true, timeRemainingMs: timeLeft });
 });
 
-// Get remaining time API
+// API: Get remaining time
 app.get('/api/time-remaining', (req, res) => {
   if (!sessionActive) {
     return res.json({ timeRemainingMs: 0 });
@@ -72,7 +72,7 @@ app.get('/api/time-remaining', (req, res) => {
   res.json({ timeRemainingMs: timeLeft });
 });
 
-// Exit API
+// API: Exit session
 app.post('/api/exit', (req, res) => {
   if (!sessionActive) {
     return res.json({ success: true });
@@ -85,7 +85,7 @@ app.post('/api/exit', (req, res) => {
   res.json({ success: true, timeRemainingMs: timeLeft });
 });
 
-// Periodic check to expire session
+// Session expiration checker
 setInterval(() => {
   if (sessionActive) {
     if (getTimeRemaining() === 0) {
