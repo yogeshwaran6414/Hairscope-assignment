@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 5000;
 
 
 
-app.use(cors({ origin: 'https://hairscope-assignment-yp47.vercel.app' }));
+app.use(cors({ origin: 'https://hairscope-assignment-sjrt.vercel.app/' }));
 app.use(express.json());
 
 // Hardcoded user password
