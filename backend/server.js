@@ -4,7 +4,7 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Allowed frontend origins (without trailing slashes)
+// Allowed frontend origins
 const allowedOrigins = [
   'https://hairscope-assignment-sjrt.vercel.app',
   'http://localhost:5173',
@@ -13,10 +13,8 @@ const allowedOrigins = [
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    // Normalize origin by removing trailing slash
     const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
     if (allowedOrigins.includes(normalizedOrigin)) {
-      // Respond with original origin exactly as sent by browser (no trailing slash added)
       callback(null, origin);
     } else {
       callback(new Error('CORS not allowed for this origin'));
@@ -29,15 +27,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Hardcoded password for lab entry
+// Hardcoded password
 const USER_PASSWORD = "Hairscope@2025";
 
+// Session state variables
 let sessionActive = false;
 let sessionStartTime = null;
 const SESSION_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 let sessionExpirationTime = null;
 let timeRemainingOnExit = null;
-let loginBlocked = false;
 
 function getTimeRemaining() {
   if (!sessionStartTime) return 0;
@@ -47,17 +45,13 @@ function getTimeRemaining() {
 }
 
 app.post('/api/login', (req, res) => {
-  if (loginBlocked) {
-    return res.status(403).json({ success: false, message: 'Session time expired. Login blocked.' });
-  }
-
   const { password } = req.body;
+
   if (password !== USER_PASSWORD) {
     return res.status(401).json({ success: false, message: 'Incorrect password.' });
   }
 
   if (!sessionActive) {
-    sessionActive = true;
     const now = Date.now();
     if (timeRemainingOnExit !== null) {
       sessionExpirationTime = now + timeRemainingOnExit;
@@ -66,12 +60,14 @@ app.post('/api/login', (req, res) => {
       sessionExpirationTime = now + SESSION_DURATION_MS;
     }
     sessionStartTime = now;
+    sessionActive = true;
   }
 
   const timeLeft = getTimeRemaining();
   if (timeLeft === 0) {
-    loginBlocked = true;
-    return res.status(403).json({ success: false, message: 'Session time expired. Login blocked.' });
+    // session expired, but auto-reset allows new session below
+    sessionActive = false; 
+    return res.status(403).json({ success: false, message: 'Session time expired. Log in again to start new session.' });
   }
 
   res.json({ success: true, timeRemainingMs: timeLeft });
@@ -83,7 +79,6 @@ app.get('/api/time-remaining', (req, res) => {
   }
   const timeLeft = getTimeRemaining();
   if (timeLeft === 0) {
-    loginBlocked = true;
     sessionActive = false;
   }
   res.json({ timeRemainingMs: timeLeft });
@@ -101,15 +96,15 @@ app.post('/api/exit', (req, res) => {
   res.json({ success: true, timeRemainingMs: timeLeft });
 });
 
+// Auto-reset session state when expired to allow new sessions without restart
 setInterval(() => {
   if (sessionActive) {
     if (getTimeRemaining() === 0) {
+      console.log("Session expired, resetting session state.");
       sessionActive = false;
-      loginBlocked = true;
       sessionStartTime = null;
       sessionExpirationTime = null;
       timeRemainingOnExit = null;
-      console.log("Session expired, login blocked until server restart.");
     }
   }
 }, 1000);
