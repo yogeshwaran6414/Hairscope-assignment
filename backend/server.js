@@ -4,18 +4,37 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Allowed frontend origins (without trailing slashes)
+const allowedOrigins = [
+  'https://hairscope-assignment-sjrt.vercel.app',
+  'http://localhost:5173',
+];
 
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    // Normalize origin by removing trailing slash
+    const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      // Respond with original origin exactly as sent by browser (no trailing slash added)
+      callback(null, origin);
+    } else {
+      callback(new Error('CORS not allowed for this origin'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST'],
+};
 
-app.use(cors({ origin: 'https://hairscope-assignment-sjrt.vercel.app/' }));
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// Hardcoded user password
+// Hardcoded password for lab entry
 const USER_PASSWORD = "Hairscope@2025";
 
-// Session related variables
 let sessionActive = false;
 let sessionStartTime = null;
-const SESSION_DURATION_MS = 10 * 60 * 1000; // 10 minutes in ms
+const SESSION_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 let sessionExpirationTime = null;
 let timeRemainingOnExit = null;
 let loginBlocked = false;
@@ -27,7 +46,6 @@ function getTimeRemaining() {
   return remaining > 0 ? remaining : 0;
 }
 
-// API: Login
 app.post('/api/login', (req, res) => {
   if (loginBlocked) {
     return res.status(403).json({ success: false, message: 'Session time expired. Login blocked.' });
@@ -59,7 +77,6 @@ app.post('/api/login', (req, res) => {
   res.json({ success: true, timeRemainingMs: timeLeft });
 });
 
-// API: Get remaining time
 app.get('/api/time-remaining', (req, res) => {
   if (!sessionActive) {
     return res.json({ timeRemainingMs: 0 });
@@ -72,7 +89,6 @@ app.get('/api/time-remaining', (req, res) => {
   res.json({ timeRemainingMs: timeLeft });
 });
 
-// API: Exit session
 app.post('/api/exit', (req, res) => {
   if (!sessionActive) {
     return res.json({ success: true });
@@ -85,7 +101,6 @@ app.post('/api/exit', (req, res) => {
   res.json({ success: true, timeRemainingMs: timeLeft });
 });
 
-// Session expiration checker
 setInterval(() => {
   if (sessionActive) {
     if (getTimeRemaining() === 0) {
@@ -100,5 +115,5 @@ setInterval(() => {
 }, 1000);
 
 app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+  console.log(`Backend server running on port ${PORT}`);
 });
